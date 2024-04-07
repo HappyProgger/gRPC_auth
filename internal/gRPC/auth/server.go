@@ -2,13 +2,16 @@ package auth
 
 import (
 	"context"
-	ssov1 "github.com/HappyProgger/gRPC_auth/protos/gen/go/happy.sso.v1"
-	"github.com/golang/protobuf/protoc-gen-go/grpc"
-	// Сгенерированный код
+	"errors"
+	"github.com/HappyProgger/gRPC_auth/internal/services/auth"
+	ssov1 "github.com/HappyProgger/gRPC_auth/protos/gen/go/sso"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type serverAPI struct {
-	ssov1.UnimplementedAuthServer // Хитрая штука, о ней ниже
+	ssov1.UnimplementedAuthServer // Хитрая штука, о ней ниже,
 	auth                          Auth
 }
 type Auth interface {
@@ -21,11 +24,8 @@ type Auth interface {
 	RegisterNewUser(
 		ctx context.Context,
 		email string,
-	) (userID int64, err error)
-	IsAdmin(
-		ctx context.Context,
-		userId int64,
-	) (isAdmin bool, err error)
+		password string,
+	) (userID int, err error)
 }
 
 func Register(gRPCServer *grpc.Server, auth Auth) {
@@ -36,12 +36,51 @@ func (s *serverAPI) Login(
 	ctx context.Context,
 	in *ssov1.LoginRequest,
 ) (*ssov1.LoginResponse, error) {
-	// TODO
+	if in.Email == "" {
+		return nil, status.Error(codes.InvalidArgument, "email is required")
+	}
+	if in.Password == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+	if in.GetServiceId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "app_id is required")
+	}
+	token, err := s.auth.Login(ctx, in.GetEmail(), in.GetPassword(), int(in.GetServiceId()))
+	if err != nil {
+		// Ошибку auth.ErrInvalidCredentials мы создадим ниже
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
+		}
+		return nil, status.Error(codes.Internal, "failed to login")
+	}
+	return &ssov1.LoginResponse{JwtToken: token}, nil
 }
 
 func (s *serverAPI) Register(
 	ctx context.Context,
 	in *ssov1.RegisterRequest,
 ) (*ssov1.RegisterResponse, error) {
-	// TODO
+	if in.Email == "" {
+		return nil, status.Error(codes.InvalidArgument, "email is required")
+	}
+	if in.Password == "" {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+	uid, err := s.auth.RegisterNewUser(ctx, in.GetEmail(), in.GetPassword())
+	if err != nil {
+		// Ошибку auth.ErrInvalidCredentials мы создадим ниже
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.AlreadyExists, "user already exist")
+		}
+		return nil, status.Error(codes.Internal, "failed to register user")
+	}
+	return &ssov1.RegisterResponse{UserId: int64(uid)}, nil
+}
+
+func (s *serverAPI) IsAdmin(
+	ctx context.Context,
+	in *ssov1.IsAdminRequest,
+) (*ssov1.IsAdminResponse, error) {
+	// TODO dsafdsaf
+
 }
