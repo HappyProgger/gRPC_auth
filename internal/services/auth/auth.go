@@ -8,6 +8,7 @@ import (
 	"github.com/HappyProgger/gRPC_auth/internal/lib/jwt"
 	"github.com/HappyProgger/gRPC_auth/internal/lib/logger/sl"
 	"github.com/HappyProgger/gRPC_auth/internal/storage"
+	"github.com/HappyProgger/gRPC_auth/storage/sqlite"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
 	"time"
@@ -37,13 +38,7 @@ type Auth struct {
 	tokenTTL    time.Duration
 }
 
-func New(
-	log *slog.Logger,
-	userSaver UserSaver,
-	userProvider UserProvider,
-	appProvider AppProvider,
-	tokenTTL time.Duration,
-) *Auth {
+func New(log *slog.Logger, userSaver UserSaver, userProvider UserProvider, appProvider *sqlite.Storage, tokenTTL time.Duration) *Auth {
 	return &Auth{
 		usrSaver:    userSaver,
 		usrProvider: userProvider,

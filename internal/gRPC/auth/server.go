@@ -25,7 +25,7 @@ type Auth interface {
 		ctx context.Context,
 		email string,
 		password string,
-	) (userID int, err error)
+	) (userID int64, err error)
 }
 
 func Register(gRPCServer *grpc.Server, auth Auth) {
@@ -77,10 +77,10 @@ func (s *serverAPI) Register(
 	return &ssov1.RegisterResponse{UserId: int64(uid)}, nil
 }
 
-func (s *serverAPI) IsAdmin(
-	ctx context.Context,
-	in *ssov1.IsAdminRequest,
-) (*ssov1.IsAdminResponse, error) {
-	// TODO dsafdsaf
-
-}
+//func (s *serverAPI) IsAdmin(
+//	ctx context.Context,
+//	in *ssov1.IsAdminRequest,
+//) (*ssov1.IsAdminResponse, error) {
+//	// TODO dsafdsaf
+//
+//}

@@ -57,22 +57,11 @@ func fetchConfigPath() string {
 	return res
 }
 
-
-
-// cmd/sso/main.go
-
-import (
-"log/slog"
-// ...
-)
-
 const (
 	envLocal = "local"
-	envDev	= "dev"
-	envProd = "prod"
+	envDev   = "dev"
+	envProd  = "prod"
 )
-
-
 
 func setupLogger(env string) *slog.Logger {
 	var log *slog.Logger
@@ -95,6 +84,6 @@ func setupLogger(env string) *slog.Logger {
 	return log
 }
 
-Создаем логгер с указанием текущего окружения.
-
-envLocal — локальный запуск. Используем удобный для консоли TextHandler и уровень логиро
+//Создаем логгер с указанием текущего окружения.
+//
+//envLocal — локальный запуск. Используем удобный для консоли TextHandler и уровень логиро
