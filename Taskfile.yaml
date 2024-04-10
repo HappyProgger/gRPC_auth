@@ -1,0 +1,28 @@
+version: "3"
+
+tasks:
+  generate:
+    desc: Generate Go code from protobuf
+    cmds:
+      - protoc -I proto proto/sso/*.proto --go_out=./gen/go/ --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative --go-grpc_out=./gen/go/
+
+
+  migrate:up:
+    desc: migrate up
+    cmds:
+      - go run ./cmd/migrator/migrator-up.go --storage-path=./storage/sso.db --migrations-path=./migrations/
+
+  migrate:down:
+    desc: migrate up
+    cmds:
+      - go run ./cmd/migrator/migrator-down.go --storage-path=./storage/sso.db --migrations-path=./migrations/
+
+
+  server:up:local:
+    desc: start server with local config
+    cmds:
+      - go run ./cmd/sso/main.go --config ./internal/config/config_local.yaml
+
+# ./Taskfile.yaml
+# See: https://taskfile.dev/api/
+#
