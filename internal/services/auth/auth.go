@@ -80,7 +80,7 @@ var (
 func (a *Auth) Login(ctx context.Context,
 	email string,
 	password string, // пароль в чистом виде, аккуратней с логами!
-	appID int, // ID приложения, в котором логинится пользователь
+	appID int,       // ID приложения, в котором логинится пользователь
 ) (string, error) {
 	const op = "Auth.Login"
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/HappyProgger/gRPC_auth/internal/services/auth"
-	ssov1 "github.com/HappyProgger/gRPC_auth/protos/gen/go/sso"
+	ssov1 "github.com/HappyProgger/gRPC_auth/protos/proto/gen/go/sso"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

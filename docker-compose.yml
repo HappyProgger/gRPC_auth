@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  adminer:
+    image: adminer:latest
+    restart: always
+    ports:
+      - '8080:8080'
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./storage/postgreSQL
+
+  app:
+    build: .
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
