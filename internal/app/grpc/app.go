@@ -16,7 +16,6 @@ import (
 
 type App struct {
 	log        *slog.Logger
-	gPPCServer grpc.Server
 	port       int
 	gRPCServer *grpc.Server
 }
@@ -31,7 +30,8 @@ func New(log *slog.Logger, authService *auth.Auth, port int) *App {
 		return status.Errorf(codes.Internal, "internal error")
 	}),
 	}
-	gRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recovery.UnaryServerInterceptor(recoveryOpts...), logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...)))
+	gRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(recovery.UnaryServerInterceptor(recoveryOpts...),
+		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...)))
 	authgrpc.Register(gRPCServer, authService)
 	return &App{
 		log:        log,

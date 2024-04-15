@@ -10,10 +10,11 @@ import (
 
 type Config struct {
 	Env            string     `yaml:"env" env-default:"local"`
-	StoragePath    string     `yaml:"storage_path" env-required:"true"`
+	CfgPath        string     `yaml:"config_path" env-required:"true"`
 	GRPC           GRPCConfig `yaml:"grpc"`
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
+	DbCon          DbCon         `yaml:"db"`
 }
 
 type GRPCConfig struct {
@@ -21,24 +22,32 @@ type GRPCConfig struct {
 	Timeout time.Duration `yaml:"timeout"`
 }
 
+type DbCon struct {
+	Username string `yaml:"username" env-default:"postgres"`
+	Password string `yaml:"password" env-default:"postgres"`
+	DbName   string `yaml:"db_name" env-default:"postgres"`
+	DbIP     string `yaml:"db_ip" env-default:"localhost"`
+	DbPort   string `yaml:"db_port" env-default:"5432"`
+}
+
+var Cfg Config
+
 func MustLoad() *Config {
 	configPath := fetchConfigPath()
 	if configPath == "" {
 		panic("config path is empty")
 	}
-
+	var Cfg Config
 	// check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		panic("config file does not exist: " + configPath)
 	}
 
-	var cfg Config
-
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+	if err := cleanenv.ReadConfig(configPath, &Cfg); err != nil {
 		panic("config path is empty: " + err.Error())
 	}
 
-	return &cfg
+	return &Cfg
 }
 
 // fetchConfigPath fetches config path from command line flag or environment variable.

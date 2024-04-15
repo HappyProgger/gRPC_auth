@@ -11,8 +11,8 @@ import (
 )
 
 type serverAPI struct {
-	ssov1.UnimplementedAuthServer // Хитрая штука, о ней ниже,
-	auth                          Auth
+	ssov1.UnimplementedAuthServer
+	auth Auth
 }
 type Auth interface {
 	Login(
@@ -47,7 +47,7 @@ func (s *serverAPI) Login(
 	}
 	token, err := s.auth.Login(ctx, in.GetEmail(), in.GetPassword(), int(in.GetServiceId()))
 	if err != nil {
-		// Ошибку auth.ErrInvalidCredentials мы создадим ниже
+		// Ошибку auth.ErrInvalidCredentials создадим ниже
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
 		}

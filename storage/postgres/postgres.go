@@ -1,12 +1,15 @@
-package sqlite
+package postgres
 
 import (
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	cfg "github.com/HappyProgger/gRPC_auth/internal/config"
 	"github.com/HappyProgger/gRPC_auth/internal/domain/models"
 	"github.com/HappyProgger/gRPC_auth/internal/storage"
+	"github.com/ilyakaznacheev/cleanenv"
+	_ "github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 )
 
@@ -15,11 +18,24 @@ type Storage struct {
 }
 
 // Конструктор Storage
-func New(storagePath string) (*Storage, error) {
-	const op = "storage.sqlite.New"
+func New(cfg_path string) (*Storage, error) {
 
-	// Указываем путь до файла БД
-	db, err := sql.Open("sqlite3", storagePath)
+	var cfgDB cfg.Config
+	if err := cleanenv.ReadConfig(cfg_path, &cfgDB); err != nil {
+		panic("config path is empty: " + err.Error())
+	}
+	fmt.Errorf(cfgDB.DbCon.Password, cfgDB.DbCon.Username)
+	fmt.Errorf(cfgDB.DbCon.Username, cfgDB.DbCon.Password,
+		cfgDB.DbCon.DbIP, cfgDB.DbCon.DbPort, cfgDB.DbCon.DbName)
+	const op = "storage.postgres.New"
+	//загружаем конфиг
+
+	//Указываем путь до файла БД
+
+	db, err := sql.Open(`postgres`,
+		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+			cfgDB.DbCon.Username, cfgDB.DbCon.Password, cfgDB.DbCon.DbIP, cfgDB.DbCon.DbPort, cfgDB.DbCon.DbName))
+	//fmt.Sprintf("postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -28,12 +44,12 @@ func New(storagePath string) (*Storage, error) {
 }
 
 func (s *Storage) App(ctx context.Context, id int) (models.App, error) {
-	const op = "storage.sqlite.App"
-
-	stmt, err := s.db.Prepare("SELECT id, name, secret FROM apps WHERE id = ?")
+	const op = "storage.postgres.App"
+	stmt, err := s.db.Prepare("SELECT id, name, secret FROM apps WHERE id = $1")
 	if err != nil {
 		return models.App{}, fmt.Errorf("%s: %w", op, err)
 	}
+	fmt.Errorf("%s: %w", op, "fsdfsadfasdf")
 
 	row := stmt.QueryRowContext(ctx, id)
 
@@ -46,26 +62,27 @@ func (s *Storage) App(ctx context.Context, id int) (models.App, error) {
 
 		return models.App{}, fmt.Errorf("%s: %w", op, err)
 	}
-
 	return app, nil
 }
 
 func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
-	const op = "storage.sqlite.SaveUser"
+	const op = "storage.postgres.SaveUser"
 
-	// Простой запрос на добавление пользователя
-	stmt, err := s.db.Prepare("INSERT INTO users(users.email, users.pass_hash) VALUES(?, ?)")
+	// Prepare the query with the RETURNING clause
+	var id int64
+	stmt, err := s.db.Prepare("INSERT INTO users (email, pass_hash) VALUES ($1, $2) RETURNING id")
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Выполняем запрос, передав параметры
-	res, err := stmt.ExecContext(ctx, email, passHash)
+	// Execute the query, passing parameters
+	err = stmt.QueryRowContext(ctx, email, passHash).Scan(&id)
 	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+
 		var sqliteErr sqlite3.Error
 
-		// Небольшое кунг-фу для выявления ошибки ErrConstraintUnique
-		// (см. подробности ниже)
+		// Small hack to identify the ErrConstraintUnique error
 		if errors.As(err, &sqliteErr) && sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
 			return 0, fmt.Errorf("%s: %w", op, storage.ErrUserExists)
 		}
@@ -73,20 +90,14 @@ func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Получаем ID созданной записи
-	id, err := res.LastInsertId()
-	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
-	}
-
+	// Now 'id' contains the ID of the newly inserted row
 	return id, nil
 }
 
 // User returns user by email
 func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
-	const op = "storage.sqlite.User"
-
-	stmt, err := s.db.Prepare("SELECT id, email, pass_hash FROM users WHERE email = ?")
+	const op = "storage.postgres.User"
+	stmt, err := s.db.Prepare("SELECT id, email, pass_hash FROM users WHERE email = $1 ")
 	if err != nil {
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -102,6 +113,5 @@ func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
-
 	return user, nil
 }

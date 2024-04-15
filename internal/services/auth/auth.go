@@ -8,7 +8,7 @@ import (
 	"github.com/HappyProgger/gRPC_auth/internal/lib/jwt"
 	"github.com/HappyProgger/gRPC_auth/internal/lib/logger/sl"
 	"github.com/HappyProgger/gRPC_auth/internal/storage"
-	"github.com/HappyProgger/gRPC_auth/storage/sqlite"
+	"github.com/HappyProgger/gRPC_auth/storage/postgres"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
 	"time"
@@ -38,7 +38,7 @@ type Auth struct {
 	tokenTTL    time.Duration
 }
 
-func New(log *slog.Logger, userSaver UserSaver, userProvider UserProvider, appProvider *sqlite.Storage, tokenTTL time.Duration) *Auth {
+func New(log *slog.Logger, userSaver UserSaver, userProvider UserProvider, appProvider *postgres.Storage, tokenTTL time.Duration) *Auth {
 	return &Auth{
 		usrSaver:    userSaver,
 		usrProvider: userProvider,
@@ -50,7 +50,6 @@ func New(log *slog.Logger, userSaver UserSaver, userProvider UserProvider, appPr
 
 func (a *Auth) RegisterNewUser(ctx context.Context, email string, password string) (int64, error) {
 	op := "Auth.RegisterNewUser"
-
 	log := a.log.With(
 		slog.String("op", op),
 		slog.String("email", email),
@@ -108,7 +107,7 @@ func (a *Auth) Login(ctx context.Context,
 
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
-
+	//todo доделать
 	// Получаем информацию о приложении
 	app, err := a.appProvider.App(ctx, appID)
 	if err != nil {

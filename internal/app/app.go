@@ -3,7 +3,7 @@ package app
 import (
 	grpcapp "github.com/HappyProgger/gRPC_auth/internal/app/grpc"
 	"github.com/HappyProgger/gRPC_auth/internal/services/auth"
-	"github.com/HappyProgger/gRPC_auth/storage/sqlite"
+	"github.com/HappyProgger/gRPC_auth/storage/postgres"
 	"log/slog"
 	"time"
 )
@@ -15,10 +15,12 @@ type App struct {
 func New(
 	log *slog.Logger,
 	grpcPort int,
-	storagePath string,
+	cfgPath string,
 	tokenTTL time.Duration,
 ) *App {
-	storage, err := sqlite.New(storagePath)
+	//todo вставить динамический путь до приложения 23 string
+
+	storage, err := postgres.New(cfgPath)
 	if err != nil {
 		panic(err)
 	}

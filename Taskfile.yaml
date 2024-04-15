@@ -8,21 +8,25 @@ tasks:
 
 
   migrate:up:
-    desc: migrate up
+    desc: Migrate up
     cmds:
       - go run ./cmd/migrator/migrator-up.go --storage-path=./storage/sso.db --migrations-path=./migrations/
 
   migrate:down:
-    desc: migrate up
+    desc: Migrate up
     cmds:
       - go run ./cmd/migrator/migrator-down.go --storage-path=./storage/sso.db --migrations-path=./migrations/
 
 
   server:up:local:
-    desc: start server with local config
+    desc: Start server with local config
     cmds:
       - go run ./cmd/sso/main.go --config=./internal/config/config_local.yaml
-
+      
+  reset:
+    desc: Reset project with DB!!!
+    cmds:
+      - task migrate:down && task migrate:up && task server:up:local
 # ./Taskfile.yaml
 # See: https://taskfile.dev/api/
 #

@@ -1,7 +1,15 @@
 env: "local"
-storage_path: "./storage"
+config_path: "./internal/config/config_local.yaml"
 
+db:
+  username: postgres
+  password: postgres
+  db_name: postgres
+  db_ip: localhost
+  db_port: 5432
 
 grpc:
   port: 44044
   timeout: 10h
+
+
