@@ -10,3 +10,6 @@ CREATE TABLE IF NOT EXISTS apps (
                                     name        TEXT NOT NULL UNIQUE,
                                     secret TEXT NOT NULL UNIQUE
 );
+
+-- регитрируем в таблице apps наше приложение с миграциями
+INSERT INTO apps (name, secret) VALUES ('jwt_auth', 'secret_key');

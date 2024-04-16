@@ -11,6 +11,7 @@ import (
 	"github.com/HappyProgger/gRPC_auth/storage/postgres"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
+	"strconv"
 	"time"
 )
 
@@ -28,6 +29,7 @@ type UserSaver interface {
 
 type UserProvider interface {
 	User(ctx context.Context, email string) (models.User, error)
+	IsAdmin(ctx context.Context, userId int64) (bool, error)
 }
 
 type Auth struct {
@@ -125,4 +127,18 @@ func (a *Auth) Login(ctx context.Context,
 	}
 
 	return token, nil
+}
+
+func (a *Auth) IsAdmin(ctx context.Context, userId int64) (isAdmin bool, err error) {
+	const op = "Auth.IsAdmin"
+	log := a.log.With(slog.String("op", op), slog.String("userId", strconv.Itoa(int(userId))))
+
+	log.Info("Attempting to check if user is an admin")
+
+	res, nil := a.usrProvider.IsAdmin(ctx, userId)
+
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+	return res, nil
 }

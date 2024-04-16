@@ -26,9 +26,13 @@ type Auth interface {
 		email string,
 		password string,
 	) (userID int64, err error)
+	IsAdmin(
+		ctx context.Context,
+		userID int64,
+	) (isAdmin bool, err error)
 }
 
-func Register(gRPCServer *grpc.Server, auth Auth) {
+func Register(gRPCServer *grpc.Server, auth *auth.Auth) {
 	ssov1.RegisterAuthServer(gRPCServer, &serverAPI{auth: auth})
 }
 
@@ -75,6 +79,20 @@ func (s *serverAPI) Register(
 		return nil, status.Error(codes.Internal, "failed to register user")
 	}
 	return &ssov1.RegisterResponse{UserId: int64(uid)}, nil
+}
+
+func (s *serverAPI) IsAdmin(
+	ctx context.Context,
+	in *ssov1.IsAdminRequest,
+) (*ssov1.IsAdminResponse, error) {
+	if in.UserId == 0 {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	isAdmin, err := s.auth.IsAdmin(ctx, in.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, "user_id not exist")
+	}
+	return &ssov1.IsAdminResponse{IsAdmin: bool(isAdmin)}, nil
 }
 
 //func (s *serverAPI) IsAdmin(

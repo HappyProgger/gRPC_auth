@@ -20,13 +20,13 @@ type Storage struct {
 // Конструктор Storage
 func New(cfg_path string) (*Storage, error) {
 
-	var cfgDB cfg.Config
+	var cfgDB cfg.DbCon
 	if err := cleanenv.ReadConfig(cfg_path, &cfgDB); err != nil {
 		panic("config path is empty: " + err.Error())
 	}
-	fmt.Errorf(cfgDB.DbCon.Password, cfgDB.DbCon.Username)
-	fmt.Errorf(cfgDB.DbCon.Username, cfgDB.DbCon.Password,
-		cfgDB.DbCon.DbIP, cfgDB.DbCon.DbPort, cfgDB.DbCon.DbName)
+	fmt.Errorf(cfgDB.Password, cfgDB.Username)
+	fmt.Errorf(cfgDB.Username, cfgDB.Password,
+		cfgDB.DbIP, cfgDB.DbPort, cfgDB.DbName)
 	const op = "storage.postgres.New"
 	//загружаем конфиг
 
@@ -34,7 +34,7 @@ func New(cfg_path string) (*Storage, error) {
 
 	db, err := sql.Open(`postgres`,
 		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			cfgDB.DbCon.Username, cfgDB.DbCon.Password, cfgDB.DbCon.DbIP, cfgDB.DbCon.DbPort, cfgDB.DbCon.DbName))
+			cfgDB.Username, cfgDB.Password, cfgDB.DbIP, cfgDB.DbPort, cfgDB.DbName))
 	//fmt.Sprintf("postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -114,4 +114,41 @@ func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
 	return user, nil
+}
+
+type Roles struct {
+	Admin, User int64
+}
+
+var Roles_of_user Roles = Roles{
+	Admin: 0,
+	User:  1,
+}
+
+func (s *Storage) IsAdmin(ctx context.Context, user_id int64) (bool, error) {
+	op := "storage.postgres.IsAdmin"
+	stmt, err := s.db.Prepare("SELECT role FROM users WHERE id = $1")
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+	var role int64
+	raw := stmt.QueryRowContext(ctx, user_id)
+	err = raw.Scan(&role)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+		//todo сделать нормальную обработку ошибки в случае получения проблемного значения
+	}
+	//return false, fmt.Errorf("%s: %w", op, fmt.Errorf(reflect.TypeOf(role)))
+
+	//todo что-то не так с проверкой на тип
+	return checkRole(role)
+}
+
+func checkRole(role int64) (bool, error) {
+	switch role {
+	case Roles_of_user.Admin:
+		return true, nil
+	default:
+		return false, nil
+	}
 }
