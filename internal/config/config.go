@@ -15,6 +15,8 @@ type Config struct {
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
 	DbCon          DbCon         `yaml:"db"`
+	Clients        ClientConfig  `yaml:"client_config"`
+	AppSecret      string        `yaml:"app_secret" env:"APP_SECRET"`
 }
 
 type GRPCConfig struct {
@@ -28,6 +30,15 @@ type DbCon struct {
 	DbName   string `yaml:"db_name" env-default:"postgres"`
 	DbIP     string `yaml:"db_ip" env-default:"localhost"`
 	DbPort   string `yaml:"db_port" env-default:"5432"`
+}
+
+type Client struct {
+	Addres       string        `yaml:"address"`
+	Timeout      time.Duration `yaml:"timeout"`
+	RetriesCount int           `yaml:"retries_count"`
+}
+type ClientConfig struct {
+	SSO Client `yaml:"sso"`
 }
 
 var Cfg Config
@@ -48,6 +59,30 @@ func MustLoad() *Config {
 	}
 
 	return &Cfg
+}
+
+func MustLoadWithPath(pathToConfig string) *Config {
+	configPath := pathToConfig
+	if pathToConfig == "" {
+		configPath = fetchConfigPath()
+	}
+	var Cfg Config
+
+	if err := cleanenv.ReadConfig(configPath, &Cfg); err != nil {
+		panic("config path is invalid: " + err.Error())
+	}
+
+	return &Cfg
+}
+
+func configPath() string {
+	conf := "CONFIG_PATH"
+	if os.Getenv(conf); os.Getenv(conf) != "" {
+		return os.Getenv(conf)
+	}
+
+	return "./internal/config/config_local.yaml"
+
 }
 
 // fetchConfigPath fetches config path from command line flag or environment variable.

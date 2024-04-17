@@ -94,11 +94,3 @@ func (s *serverAPI) IsAdmin(
 	}
 	return &ssov1.IsAdminResponse{IsAdmin: bool(isAdmin)}, nil
 }
-
-//func (s *serverAPI) IsAdmin(
-//	ctx context.Context,
-//	in *ssov1.IsAdminRequest,
-//) (*ssov1.IsAdminResponse, error) {
-//	// TODO dsafdsaf
-//
-//}

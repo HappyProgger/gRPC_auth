@@ -1,0 +1,15 @@
+env: "local"
+config_path: "./internal/config/config_local_test.yaml"
+
+db:
+  username: postgres
+  password: postgres
+  db_name: postgres
+  db_ip: localhost
+  db_port: 5432
+
+grpc:
+  port: 44044
+  timeout: 10h
+
+

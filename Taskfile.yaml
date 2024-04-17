@@ -27,6 +27,12 @@ tasks:
     desc: Reset project with DB!!!
     cmds:
       - task migrate:down && task migrate:up && task server:up:local
+
+
+  test:local:
+    desc: Start local tests
+    cmds:
+      - go run ./tests/suite.go
 # ./Taskfile.yaml
 # See: https://taskfile.dev/api/
 #

@@ -1,0 +1,5 @@
+#ignor DB files
+/storage/postgres/*
+/storage/sqlite/*
+
+
